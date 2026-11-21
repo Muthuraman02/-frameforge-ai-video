@@ -60,21 +60,16 @@ class FFmpegService:
         for img in image_paths:
             cmd.extend(["-loop", "1", "-t", f"{clip_duration:.3f}", "-i", str(img)])
 
-        has_audio = audio_path is not None and audio_path.exists()
-        if has_audio:
+        # Only include an audio stream when a real, non-empty audio file exists.
+        # Mapping a generated silent track can be misinterpreted as static/noise by
+        # some mobile players; a video-only MP4 is safer when narration is disabled.
+        has_audio = (
+            audio_path is not None
+            and audio_path.is_file()
+            and audio_path.stat().st_size > 0
+        )
+        if has_audio and audio_path is not None:
             cmd.extend(["-i", str(audio_path)])
-        else:
-            # Add a clean silent stereo track for universal player compatibility
-            cmd.extend(
-                [
-                    "-f",
-                    "lavfi",
-                    "-t",
-                    str(duration_seconds),
-                    "-i",
-                    "anullsrc=channel_layout=stereo:sample_rate=44100",
-                ]
-            )
 
         filter_parts: List[str] = []
         for idx in range(num_scenes):
@@ -106,17 +101,24 @@ class FFmpegService:
                 offset += clip_duration - fade_duration
             final_video_label = "[vout]"
 
-        audio_input_idx = num_scenes
-        filter_complex = ";".join(filter_parts)
-
         cmd.extend(
             [
                 "-filter_complex",
-                filter_complex,
+                ";".join(filter_parts),
                 "-map",
                 final_video_label,
-                "-map",
-                f"{audio_input_idx}:a",
+            ]
+        )
+
+        if has_audio:
+            audio_input_idx = num_scenes
+            cmd.extend(["-map", f"{audio_input_idx}:a", "-c:a", "aac", "-b:a", "128k"])
+        else:
+            # Explicitly produce a video-only MP4; do not synthesize a fake audio track.
+            cmd.append("-an")
+
+        cmd.extend(
+            [
                 "-t",
                 str(duration_seconds),
                 "-c:v",
@@ -127,13 +129,8 @@ class FFmpegService:
                 "23",
                 "-pix_fmt",
                 "yuv420p",
-                "-c:a",
-                "aac",
-                "-b:a",
-                "128k",
                 "-movflags",
                 "+faststart",
-                "-shortest",
                 str(output_path),
             ]
         )
