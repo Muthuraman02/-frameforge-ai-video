@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: frameforge-ai-video-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: FrameForge AI Video Backend
+      - key: DATABASE_URL
+        value: sqlite:///./frameforge.db
+      - key: FRONTEND_ORIGINS
+        value: http://localhost:3000,https://frameforge-ai-video-three.vercel.app
+      - key: GENERATION_MODE
+        value: demo
+      - key: STORAGE_BACKEND
+        value: local
+      - key: LOCAL_STORAGE_PATH
+        value: storage/videos
+      - key: TEMP_STORAGE_PATH
+        value: storage/tmp
+      - key: MAX_CONCURRENT_JOBS
+        value: "1"
+      - key: MAX_PROMPT_LENGTH
+        value: "2000"
+      - key: JOB_TIMEOUT_SECONDS
+        value: "900"
+      - key: AI_PROVIDER
+        value: none
+      - key: AI_API_KEY
+        sync: false
+      - key: TTS_PROVIDER
+        value: none
