@@ -1,6 +1,1 @@
-import type { Metadata } from "next";
-import "./globals.css";
-export const metadata: Metadata = { title: "FrameForge AI Video Studio", description: "Turn ideas into cinematic videos with AI." };
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
-}
+import type { Metadata } from "next"; import "./globals.css"; export const metadata: Metadata = { title: "FrameForge AI Video Studio", description: "Create cinematic videos with AI." }; export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="en"><body>{children}</body></html>; }
